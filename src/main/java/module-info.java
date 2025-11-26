@@ -9,4 +9,9 @@ module com.chat {
 
     opens com.chat to javafx.fxml;
     exports com.chat;
+    exports com.chat.server;
+    opens com.chat.server to javafx.fxml;
+
+    opens com.chat.client to javafx.fxml;
+    exports com.chat.client;
 }
