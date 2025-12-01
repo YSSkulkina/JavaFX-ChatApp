@@ -10,14 +10,15 @@ import java.io.IOException;
 
 public class Start extends Application {
 
+    private static Stage primaryStage;
+
 
     @Override
     public void start(Stage stage) throws IOException {
+        primaryStage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(Start.class.getResource("StartPage.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
-        scene.getStylesheets().add(getClass().getResource("styles/style.css").toExternalForm());
         stage.setTitle("Chat Application");
-        //stage.initStyle(StageStyle.UNDECORATED);--убирает шапку
         stage.setScene(scene);
         Image image = new Image(getClass().getResourceAsStream("images/chat.png"));
         stage.getIcons().add(image);
@@ -26,9 +27,12 @@ public class Start extends Application {
 
     public static void main(String[] args) {
         launch();
-
-        }
     }
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
+    }
+}
 
 
 

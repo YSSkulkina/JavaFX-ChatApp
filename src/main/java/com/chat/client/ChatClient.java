@@ -1,24 +1,32 @@
 package com.chat.client;
 
-import java.io.BufferedReader;
+import com.chat.StartController;
+import com.chat.messages.Message;
+import com.chat.messages.MessageType;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import static com.chat.messages.MessageType.CONNECTED;
 
 public class ChatClient implements Runnable {
 
     private String hostname;
     private int port;
-    private String username;
-    private String picture;
+    private static String username;
+    private static String picture;
     private ChatClientController controller;
     private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
-    private ExecutorService executor;
+    private static ObjectOutputStream oos;
+    private InputStream is;
+    private ObjectInputStream input;
+    private OutputStream outputStream;
+
+    private static final String HASCONNECTED = "has connected";
 
     public ChatClient(String hostname, int port, String username, String picture, ChatClientController controller) {
         this.hostname = hostname;
@@ -26,80 +34,62 @@ public class ChatClient implements Runnable {
         this.username = username;
         this.picture = picture;
         this.controller = controller;
-        this.executor = Executors.newFixedThreadPool(2);
     }
 
     @Override
     public void run() {
         try {
             socket = new Socket(hostname, port);
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            // Отправляем информацию о пользователе при подключении
-            out.println("JOIN|" + username + "|" + picture);
-
-            // Запускаем поток для получения сообщений
-            executor.submit(this::receiveMessages);
-
+            outputStream = socket.getOutputStream();
+            oos = new ObjectOutputStream(outputStream);
+            is = socket.getInputStream();
+            input = new ObjectInputStream(is);
         } catch (IOException e) {
-            e.printStackTrace();
+            StartController.getInstance().showAlert("Ошибка", "Невозможно подключиться к серверу");
         }
-    }
 
-    private void receiveMessages() {
-        System.out.println("Получено сообщение");
         try {
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                processMessage(inputLine);
+            connect();
+
+            while (socket.isConnected()) {
+                Message message = null;
+                message = (Message) input.readObject();
+
+                if (message != null) {
+                    switch (message.getType()) {
+                        case USER:
+                            controller.addMessage(message);
+                            break;
+                        case NOTIFICATION:
+                        case SERVER:
+                            String notificationText = message.getName() + " " + message.getMsg();
+                            controller.addNotification(notificationText);
+                            break;
+                    }
+                }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            controller.logoutScene();
         }
     }
 
-    private void processMessage(String message) {
-
-        String[] parts = message.split("\\|", 3);
-        if (parts.length >= 3) {
-            String type = parts[0];
-            String sender = parts[1];
-            String content = parts[2];
-
-            if ("USER".equals(type)) {
-                controller.addMessage(sender, content);
-            } else if ("SYSTEM".equals(type)) {
-                controller.addSystemMessage(content);
-            }
-        } else {
-            controller.addMessage("Сервер", message);
-        }
+    public static void send(String msg) throws IOException {
+        Message createMessage = new Message();
+        createMessage.setName(username);
+        createMessage.setType(MessageType.USER);
+        createMessage.setMsg(msg);
+        createMessage.setPicture(picture);
+        oos.writeObject(createMessage);
+        oos.flush();
     }
 
-    public void sendMessage(String message) {
-        if (out != null && !message.trim().isEmpty()) {
-            out.println("MESSAGE|" + username + "|" + message);
-        }
-    }
-
-    public void disconnect() {
-        try {
-            if (out != null) {
-                out.println("LEAVE|" + username);
-            }
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
-            if (socket != null) {
-                socket.close();
-            }
-            executor.shutdown();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static void connect() throws IOException {
+        Message createMessage = new Message();
+        createMessage.setName(username);
+        createMessage.setType(CONNECTED);
+        createMessage.setMsg(HASCONNECTED);
+        createMessage.setPicture(picture);
+        oos.writeObject(createMessage);
     }
 }

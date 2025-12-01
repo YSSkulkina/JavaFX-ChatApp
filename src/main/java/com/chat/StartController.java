@@ -20,7 +20,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,40 +69,31 @@ public class StartController implements Initializable {
             username = usernameField.getText();
             String picture = selectedPicture.getText();
 
-            // Скрыть окно входа
             signInBt.getScene().getWindow().hide();
 
-            // Загрузить интерфейс чата
             FXMLLoader fmxlLoader = new FXMLLoader(Start.class.getResource("ChatClientGUI.fxml"));
             Parent window = fmxlLoader.load();
             controller = fmxlLoader.<ChatClientController>getController();
 
-            // Создать клиент чата
             ChatClient listener = new ChatClient(hostname, port, username, picture, controller);
             Thread x = new Thread(listener);
+            x.setDaemon(true);
             x.start();
 
-            // Установить клиента в контроллер
             controller.setClient(listener);
-            controller.setUsername(username);
+            controller.setMyUsername(username);
             controller.setUsernameImage(picture);
 
             this.scene = new Scene(window);
 
-            // Показать окно чата
             Platform.runLater(() -> {
                 Stage stage = new Stage();
-                stage.setResizable(true);
+                stage.setResizable(false);
                 stage.setWidth(790);
                 stage.setHeight(550);
                 stage.setTitle("Chat Application");
                 Image image = new Image(Start.class.getResourceAsStream("images/chat.png"));
                 stage.getIcons().add(image);
-                stage.setOnCloseRequest((WindowEvent e) -> {
-                    listener.disconnect();
-                    Platform.exit();
-                    System.exit(0);
-                });
                 stage.setScene(this.scene);
                 stage.setMinWidth(800);
                 stage.setMinHeight(300);
@@ -118,7 +108,7 @@ public class StartController implements Initializable {
         usernameField.clear();
     }
 
-    private void showAlert(String title, String message) {
+    public void showAlert(String title, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle(title);
@@ -130,7 +120,6 @@ public class StartController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //imagePicker.getItems().addAll("Default", "Man", "Woman");
         imagePicker.getSelectionModel().selectFirst();
         selectedPicture.textProperty().bind(imagePicker.getSelectionModel().selectedItemProperty());
         selectedPicture.setVisible(false);

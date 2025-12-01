@@ -1,5 +1,7 @@
 package com.chat.server;
 
+import com.chat.messages.Message;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChatServer {
+
     private static final int PORT = 12345;
     private static Set<ClientHandler> clients = Collections.synchronizedSet(new HashSet<>());
 
@@ -26,12 +29,10 @@ public class ChatServer {
         }
     }
 
-    public static void broadcastMessage(String message, ClientHandler sender) {
+    public static void broadcastMessage(Message message, ClientHandler sender) {
         synchronized (clients) {
             for (ClientHandler client : clients) {
-                if (client != sender) {
-                    client.sendMessage(message);
-                }
+                client.sendMessage(message);
             }
         }
     }
@@ -40,4 +41,3 @@ public class ChatServer {
         clients.remove(client);
     }
 }
-
