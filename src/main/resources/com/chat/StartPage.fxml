@@ -14,31 +14,31 @@
 
 <?import javafx.collections.FXCollections?>
 <?import java.lang.String?>
-<AnchorPane prefHeight="400.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chat.StartController">
+<AnchorPane prefHeight="450.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chat.StartController">
    <children>
       <ImageView fx:id="DefaultView" fitHeight="93" fitWidth="93" layoutX="205.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../chat/image/default.png" />
+            <Image url="@images/default.png" />
          </image>
       </ImageView>
       <ImageView fx:id="ManView" fitHeight="93.0" fitWidth="93.0" layoutX="205.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" visible="false">
          <image>
-            <Image preserveRatio="false" smooth="false" url="@../chat/image/man.png" />
+            <Image preserveRatio="false" smooth="false" url="@images/man.png" />
          </image>
       </ImageView>
       <ImageView fx:id="WomanView" fitHeight="93.0" fitWidth="124.0" layoutX="205.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" visible="false">
          <image>
-            <Image preserveRatio="false" smooth="true" url="@../chat/image/woman.png" />
+            <Image preserveRatio="false" smooth="true" url="@images/woman.png" />
          </image>
       </ImageView>
-      <AnchorPane layoutX="2.0" layoutY="118.0" prefHeight="300.0" prefWidth="500.0" style="-fx-background-color: #fafafa;">
+      <AnchorPane layoutX="2.0" layoutY="118.0" prefHeight="350.0" prefWidth="500.0" style="-fx-background-color: #fafafa;">
          <children>
             <Label layoutX="260.0" layoutY="150.4" text="Информация о сервере" textFill="#d16b12" AnchorPane.leftAnchor="222.2" AnchorPane.topAnchor="150.4">
                <font>
                   <Font size="10.0" />
                </font>
             </Label>
-            <Button fx:id="signInBt" layoutX="220.0" layoutY="264.0" mnemonicParsing="false" onAction="#onSignInBtClick" style="-fx-background-color: black;" text="Войти" textFill="WHITE">
+            <Button fx:id="signInBt" layoutX="220.0" layoutY="274.0" mnemonicParsing="false" onAction="#onSignInBtClick" style="-fx-background-color: black;" text="Войти" textFill="WHITE">
                <font>
                   <Font size="15.0" />
                </font>
@@ -76,7 +76,7 @@
                   <RowConstraints maxHeight="34.0" minHeight="10.0" prefHeight="32.0" vgrow="SOMETIMES" />
                </rowConstraints>
                <children>
-                  <Label fx:id="usernameLabel" prefHeight="18.0" prefWidth="101.0" text="Имя пользователя:" textFill="#d16b12">
+                  <Label fx:id="usernameLabel" prefHeight="18.0" prefWidth="101.0" text="Имя:" textFill="#d16b12">
                      <font>
                         <Font size="10.0" />
                      </font>

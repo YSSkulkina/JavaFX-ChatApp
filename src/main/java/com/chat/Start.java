@@ -5,7 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.IOException;
 
@@ -20,7 +19,7 @@ public class Start extends Application {
         stage.setTitle("Chat Application");
         //stage.initStyle(StageStyle.UNDECORATED);--убирает шапку
         stage.setScene(scene);
-        Image image = new Image(getClass().getResourceAsStream("image/chat.png"));
+        Image image = new Image(getClass().getResourceAsStream("images/chat.png"));
         stage.getIcons().add(image);
         stage.show();
     }

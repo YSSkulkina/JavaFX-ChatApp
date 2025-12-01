@@ -1,6 +1,8 @@
 package com.chat;
 
-import com.chat.animation.Shake;
+import com.chat.client.ChatClient;
+import com.chat.client.ChatClientController;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -14,14 +16,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Border;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
@@ -32,78 +34,103 @@ public class StartController implements Initializable {
     @FXML    private ImageView DefaultView;
     @FXML    private ImageView ManView;
     @FXML    private ImageView WomanView;
-    @FXML private ChoiceBox imagePicker;
-    @FXML private Label selectedPicture;
+    @FXML    private ChoiceBox<String> imagePicker;
+    @FXML    private Label selectedPicture;
     @FXML    private TextField hostField;
     @FXML    private TextField portField;
     @FXML    private Button signInBt;
     @FXML    private TextField usernameField;
     @FXML    private Label usernameLabel;
+
+    private Scene scene;
     private PrintWriter out;
     private BufferedReader in;
     private Socket socket;
     private String username;
+    public static ChatClientController controller;
+    private static StartController instance;
+
+    public StartController() {
+        instance = this;
+    }
+
+    public static StartController getInstance() {
+        return instance;
+    }
 
     @FXML
-    void onSignInBtClick(ActionEvent event) {
-    if(usernameField.getText().equals("")||usernameField.getText().equals("Введите имя")) {
-        usernameField.getStyleClass().add("error");
-        showAlert("Ошибка", "Введите имя пользователя");
-    }else{
-        usernameField.getStyleClass().remove("error");
-        signInBt.getScene().getWindow().hide();
-        FXMLLoader loader=new FXMLLoader();
-        loader.setLocation(getClass().getResource("ChatClientGUI.fxml"));
-        try {
-            loader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
+    void onSignInBtClick(ActionEvent event) throws IOException {
+        if (usernameField.getText().equals("") || usernameField.getText().equals("Введите имя")) {
+            usernameField.getStyleClass().add("error");
+            showAlert("Ошибка", "Введите имя пользователя");
+        } else {
+            usernameField.getStyleClass().remove("error");
+            String hostname = hostField.getText();
+            int port = Integer.parseInt(portField.getText());
+            username = usernameField.getText();
+            String picture = selectedPicture.getText();
+
+            // Скрыть окно входа
+            signInBt.getScene().getWindow().hide();
+
+            // Загрузить интерфейс чата
+            FXMLLoader fmxlLoader = new FXMLLoader(Start.class.getResource("ChatClientGUI.fxml"));
+            Parent window = fmxlLoader.load();
+            controller = fmxlLoader.<ChatClientController>getController();
+
+            // Создать клиент чата
+            ChatClient listener = new ChatClient(hostname, port, username, picture, controller);
+            Thread x = new Thread(listener);
+            x.start();
+
+            // Установить клиента в контроллер
+            controller.setClient(listener);
+            controller.setUsername(username);
+            controller.setUsernameImage(picture);
+
+            this.scene = new Scene(window);
+
+            // Показать окно чата
+            Platform.runLater(() -> {
+                Stage stage = new Stage();
+                stage.setResizable(true);
+                stage.setWidth(790);
+                stage.setHeight(550);
+                stage.setTitle("Chat Application");
+                Image image = new Image(Start.class.getResourceAsStream("images/chat.png"));
+                stage.getIcons().add(image);
+                stage.setOnCloseRequest((WindowEvent e) -> {
+                    listener.disconnect();
+                    Platform.exit();
+                    System.exit(0);
+                });
+                stage.setScene(this.scene);
+                stage.setMinWidth(800);
+                stage.setMinHeight(300);
+                stage.centerOnScreen();
+                stage.show();
+            });
         }
-        Parent root=loader.getRoot();
-        Stage stage=new Stage();
-        stage.setScene(new Scene(root));
-        stage.showAndWait();
-    }
     }
 
     @FXML
     void onTextFieldUserName(MouseEvent event) {
         usernameField.clear();
-
-    }
-    private void connectToServer() {
-        String host = hostField.getText();
-        int port = Integer.parseInt(portField.getText());
-        username = usernameField.getText();
-
-        if (username.isEmpty()) {
-            showAlert("Ошибка", "Введите имя пользователя");
-            return;
-        }
-
-        try {
-            socket = new Socket(host, port);
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            // Отправляем имя пользователя
-            out.println("/login " + username);
-
-            showAlert("Успешно","Подключение к серверу " + host + ":" + port + " успешно\n");
-        } catch (IOException e) {
-            showAlert("Ошибка подключения", "Не удалось подключиться к серверу: " + e.getMessage());
-        }
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
+
     @Override
-        public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources) {
+        //imagePicker.getItems().addAll("Default", "Man", "Woman");
         imagePicker.getSelectionModel().selectFirst();
         selectedPicture.textProperty().bind(imagePicker.getSelectionModel().selectedItemProperty());
         selectedPicture.setVisible(false);
@@ -139,6 +166,5 @@ public class StartController implements Initializable {
                 }
             }
         });
-
     }
 }
